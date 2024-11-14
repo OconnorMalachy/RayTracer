@@ -4,7 +4,7 @@ import java.util.List;
 public class hittableList implements hittable {
     public List<hittable> objects;
     public hittableList() {objects = new ArrayList<>();}
-    private AABB bbox;
+    private AABB bbox = AABB.EMPTY;
     public hittableList(hittable object) {
         this();
         add(object);
@@ -16,8 +16,10 @@ public class hittableList implements hittable {
 
     public void add(hittable object) {
         objects.add(object);
-        if(bbox == null){bbox = new AABB(interval.EMPTY, interval.EMPTY, interval.EMPTY);}
+        System.out.println(bbox);
         bbox = new AABB(bbox, object.boundingBox());
+        System.out.println(bbox);
+        System.out.println();
     }
     @Override
     public AABB boundingBox(){return bbox;}
@@ -38,4 +40,5 @@ public class hittableList implements hittable {
         return hitAnything;
     }
 }
+
 

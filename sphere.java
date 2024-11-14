@@ -8,14 +8,17 @@ public class sphere implements hittable {
         center = new ray(c, new vec3());
         radius = Math.max(0, r);
         mat = m;
-
+        
         vec3 radiusVec = new vec3(radius, radius, radius);
         bbox = new AABB(vec3.subtract(c,radiusVec), vec3.add(c,radiusVec));
+        System.out.println(bbox);
+        System.out.println();
     }
     public sphere(vec3 c1, vec3 c2, double r, material m){
         center = new ray(c1, vec3.subtract(c1,c2));
         radius = Math.max(0,r);
         mat = m;
+
         vec3 radiusVec = new vec3(radius, radius, radius);
         AABB box1 = new AABB(vec3.subtract(center.at(0),radiusVec), vec3.add(center.at(0),radiusVec));
         AABB box2 = new AABB(vec3.subtract(center.at(1),radiusVec), vec3.add(center.at(1),radiusVec));

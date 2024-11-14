@@ -9,8 +9,9 @@ public class interval{
         max = maximum;
     }
     public interval(interval a, interval b) {
-        this.min = Math.min(a.min, b.min);
-        this.max = Math.max(a.max, b.max);
+        //System.out.println(a + " " + b);
+        min = a.min <= b.min ? a.min : b.min;
+        max = a.max >= b.max ? a.max : b.max;    
     }
     public interval expand(double delta) {
         double padding = delta / 2;
@@ -26,4 +27,7 @@ public class interval{
     }
     public static final interval EMPTY = new interval(constants.infinity, -constants.infinity);
     public static final interval UNIVERSE = new interval(-constants.infinity, constants.infinity);
+    public String toString(){
+        return "MIN: " + min + "MAX: " + max;
+    }
 }

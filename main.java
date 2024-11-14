@@ -43,15 +43,11 @@ public class main {
 
         material material3 = new metal(new color(0.7, 0.6, 0.5), 0.0);
         world.add(new sphere(new vec3(4, 1, 0), 1.0, material3));
-        /*
-        BVHNode BVHWorld = new BVHNode(world);
-        world = new hittableList( BVHWorld);
-        System.out.println(BVHWorld);
-        */ 
+        world = new hittableList(new bvh(world));
         camera cam = new camera();
         cam.aspectRatio = 16.0 / 9.0;
-        cam.imageWidth = 1000;
-        cam.samplesPerPixel = 500;
+        cam.imageWidth = 500;
+        cam.samplesPerPixel = 250;
         cam.maxDepth = 50;
 
         cam.vFov = 20;
@@ -59,10 +55,16 @@ public class main {
         cam.lookAt = new vec3(0, 0, 0);
         cam.vUp = new vec3(0, 1, 0);
 
-        //cam.defocusAngle = 0.6;
-        //cam.focusDist = 10.0;
-
+        cam.defocusAngle = 0.6;
+        cam.focusDist = 10.0;
+        
+        long startTime = System.nanoTime();
+        
         cam.render(world);
+
+        long endTime = System.nanoTime();
+        double duration = (endTime - startTime) / 1_000_000_000.0;
+        System.out.printf("Rendering & Writing completed in %.2f seconds%n", duration);
 
         JFrame frame = new JFrame("PPM Viewer");
         PPMViewer panel = new PPMViewer("Output.ppm");
