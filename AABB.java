@@ -1,59 +1,66 @@
-public class AABB {
-    public interval x, y, z;
-    public AABB() {}
-
-    public AABB(interval x, interval y, interval z) {
+public class AABB{
+    public interval x,y,z;
+    public static final AABB EMPTY = new AABB(interval.EMPTY, interval.EMPTY, interval.EMPTY);
+    public static final AABB UNIVERSE = new AABB(interval.UNIVERSE, interval.UNIVERSE, interval.UNIVERSE);
+    public AABB(){}
+    public AABB(interval x, interval y, interval z){
         this.x = x;
         this.y = y;
         this.z = z;
     }
-
-    public AABB(vec3 a, vec3 b) {
-        // Treat the two points a and b as extrema for the bounding box
-        this.x = (a.x() <= b.x()) ? new interval(a.x(), b.x()) : new interval(b.x(), a.x());
-        this.y = (a.y() <= b.y()) ? new interval(a.y(), b.y()) : new interval(b.y(), a.y());
-        this.z = (a.z() <= b.z()) ? new interval(a.z(), b.z()) : new interval(b.z(), a.z());
+    public AABB(vec3 pA, vec3 pB){
+        double[] a = {pA.getEl(0), pA.getEl(1), pA.getEl(2)};
+        double[] b = {pB.getEl(0), pB.getEl(1), pB.getEl(2)};
+        this.x = (a[0]<b[0]) ? new interval(a[0], b[0]) : new interval(b[0],a[0]);
+        this.y = (a[1]<b[1]) ? new interval(a[1], b[1]) : new interval(b[1],a[1]);
+        this.z = (a[2]<b[2]) ? new interval(a[2], b[2]) : new interval(b[2],a[2]);
     }
-
-    public AABB(AABB box0, AABB box1) {
+    public AABB(AABB box0, AABB box1){
         this.x = new interval(box0.x, box1.x);
         this.y = new interval(box0.y, box1.y);
         this.z = new interval(box0.z, box1.z);
     }
+    public int longestAxis() {
+        double xSize = x.size();
+        double ySize = y.size();
+        double zSize = z.size();
 
-    public interval getAxisInterval(int axis) {
-        switch (axis) {
-            case 1:
-                return y;
-            case 2:
-                return z;
-            default:
-                return x;
+        if (xSize > ySize) {
+            return (xSize > zSize) ? 0 : 2;
+        } else {
+            return (ySize > zSize) ? 1 : 2;
         }
     }
-
-    public boolean hit(ray r, interval rayT) {
+    public interval axisInterval(int n){
+        if(n == 1){return y;}
+        if(n == 2){return z;}
+        return x;
+    }
+    
+    public boolean hit(ray r, interval rayT){
         vec3 rayOrigin = r.getOrigin();
         vec3 rayDir = r.getDirection();
-        for (int axis = 0; axis < 3; axis++) {
-            interval axisInterval = getAxisInterval(axis);
-            double adinv = 1.0 / rayDir.getEl(axis);
-
-            double t0 = (axisInterval.min - rayOrigin.getEl(axis)) * adinv;
-            double t1 = (axisInterval.max - rayOrigin.getEl(axis)) * adinv;
+        
+        for(int axis = 0; axis < 3; axis++){
+            interval ax = axisInterval(axis);
+            double adInv = 1.0/rayDir.getEl(axis);
+            
+            double t0 = (ax.min - rayOrigin.getEl(axis)) * adInv;
+            double t1 = (ax.max - rayOrigin.getEl(axis)) * adInv;
 
             if (t0 < t1) {
-                rayT.min = Math.max(rayT.min, t0);
-                rayT.max = Math.min(rayT.max, t1);
+                if (t0 > rayT.min) rayT.min = t0;
+                if (t1 < rayT.max) rayT.max = t1;
             } else {
-                rayT.min = Math.max(rayT.min, t1);
-                rayT.max = Math.min(rayT.max, t0);
+                if (t1 > rayT.min) rayT.min = t1;
+                if (t0 < rayT.max) rayT.max = t0;
             }
-
-            if (rayT.max <= rayT.min)
-                return false;
+            
+            if(rayT.max <= rayT.min){return false;}
         }
         return true;
     }
+    public String toString(){
+        return "X: " + x + "Y: " + y + "Z: " +z;
+    } 
 }
-
