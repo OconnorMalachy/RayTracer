@@ -4,8 +4,8 @@ public class main {
     public static void main(String[] args) {
 
         hittableList world = new hittableList();
-        material groundMaterial = new lambertian(new color(0.5, 0.5, 0.5));
-        world.add(new sphere(new vec3(0, -1000, 0), 1000, groundMaterial));
+        texture checker = new checkerTexture(0.32,new color(0.2,0.3,0.1), new color(0.9,0.9,0.9));
+        world.add(new sphere(new vec3(0, -1000, 0), 1000, new lambertian(checker)));
         
         for (int a = -11; a < 11; a++) {
             for (int b = -11; b < 11; b++) {
