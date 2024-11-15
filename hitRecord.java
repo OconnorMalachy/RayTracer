@@ -17,6 +17,7 @@ public class hitRecord {
         t = h.t;
         frontFace = h.frontFace;
         mat = h.mat;
-        
+        u = h.u;
+        v = h.v;
     }
 }

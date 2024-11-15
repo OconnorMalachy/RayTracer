@@ -17,6 +17,8 @@ public class camera{
 
     public int maxDepth = 10;
     public int samplesPerPixel = 10;
+    public color background;
+
     private double pixelSamplesScale;
   
     private vec3 center = new vec3();
@@ -138,23 +140,33 @@ public class camera{
         return new ray(rayOrigin, rayDirection, rayTime);
     }
     private vec3 sampleSquare(){return new vec3(constants.randomDouble() - 0.5, constants.randomDouble() - 0.5, 0);}
+
     private color rayColor(ray r, int depth, hittable world){
-        if(depth <= 0){return new color(0,0,0);}
-        hitRecord rec = new hitRecord();
-        if(world.hit(r,new interval(0.001,constants.infinity),rec)){
-            ray scattered = new ray();
-            color attenuation = new color();
-            if(rec.mat.scatter(r,rec,attenuation,scattered)){
-                return color.vecToCol(vec3.multiply(attenuation, rayColor(scattered,depth-1,world)));
-            }
-            return new color(0,0,0);
-            //vec3 direction = vec3.add(rec.normal, vec3.randomUnitVector());
-            //return color.vecToCol(vec3.multiply(0.5, rayColor(new ray(rec.p, direction), depth-1, world))); 
+        // If we've exceeded the ray bounce limit, no more light is gathered.
+        if(depth <= 0){
+            return new color(0, 0, 0);  // black color
         }
 
-        vec3 unitDirection = vec3.unitVector(r.getDirection());
-        double a = 0.5 * (unitDirection.y() + 1.0);
-        vec3 c = vec3.add(vec3.multiply((1.0 -a), new vec3(1.0,1.0,1.0)), vec3.multiply(a, new vec3(0.5,0.7,1.0)));
-        return new color(c.x(),c.y(),c.z());   
-    }  
+        hitRecord rec = new hitRecord();
+
+        // If the ray hits nothing, return the background color.
+        if(!world.hit(r, new interval(0.001, constants.infinity), rec)){
+            return background;  // background color, typically black or sky color
+        }
+
+        // Get emitted light from the material at the hit point.
+        color colorFromEmission = rec.mat.emitted(rec.u, rec.v, rec.p);
+        // Try to scatter the ray.
+        ray scattered = new ray();
+        color attenuation = new color();
+        if(!rec.mat.scatter(r, rec, attenuation, scattered)){
+            return colorFromEmission;  // If no scattering, return the emitted color.
+        }
+        // Recursively calculate color from scattered ray.
+        color colorFromScatter = color.vecToCol(vec3.multiply(attenuation, rayColor(scattered, depth - 1, world)));
+        //if(colorFromScatter.x() > 0){System.out.println(colorFromScatter);}
+        // Return the combined color: emission + scattered color.
+        return color.vecToCol(vec3.add(colorFromEmission,colorFromScatter));
+    }
+
 }

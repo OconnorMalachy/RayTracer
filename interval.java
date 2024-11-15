@@ -18,7 +18,7 @@ public class interval{
         return new interval(min - padding, max + padding);
     }
     public double size(){return max - min;}
-    public boolean contatins(double x){return min <=x && x <= max;}
+    public boolean contains(double x){return min <=x && x <= max;}
     public boolean surrounds(double x){return min < x && x < max;}
     public double clamp(double x){
         if(x < min){return min;}
@@ -29,5 +29,13 @@ public class interval{
     public static final interval UNIVERSE = new interval(-constants.infinity, constants.infinity);
     public String toString(){
         return "MIN: " + min + "MAX: " + max;
+    }
+    
+    public static interval add(interval ival, double displacement) {
+        return new interval(ival.min + displacement, ival.max + displacement);
+    }
+
+    public static interval add(double displacement, interval ival) {
+        return add(ival, displacement);
     }
 }

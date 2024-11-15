@@ -24,6 +24,13 @@ public class sphere implements hittable {
         AABB box2 = new AABB(vec3.subtract(center.at(1),radiusVec), vec3.add(center.at(1),radiusVec));
         bbox = new AABB(box1, box2);
     }
+    public static void getSphereUV(vec3 p, hitRecord rec){
+        double theta =  Math.acos(-p.y());
+        double phi = Math.atan2(-p.z(), p.x()) + Math.PI;
+      
+        rec.u = phi / (2 * Math.PI);
+        rec.v = theta / Math.PI;
+    }
     @Override
     public AABB boundingBox(){return bbox;}
     @Override
@@ -53,6 +60,7 @@ public class sphere implements hittable {
         rec.p = r.at(rec.t);
         vec3 outwardNormal = vec3.divide((vec3.subtract(rec.p, currCenter)),radius);
         rec.setFaceNormal(r,outwardNormal);
+        getSphereUV(outwardNormal, rec);
         rec.mat = mat;
         return true;
     }
