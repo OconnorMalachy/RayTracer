@@ -3,7 +3,7 @@ import javax.swing.JFrame;
 public class main {
     static camera cam = new camera();
     public static void main(String[] args) {
-        switch(7) {
+        switch(9) {
             case 1: spheres(); break;
             case 2: checkeredSpheres(); break;
             case 3: earth(); break;
@@ -11,6 +11,9 @@ public class main {
             case 5: quads(); break;
             case 6: simpleLight(); break;
             case 7: cornellBox(); break;
+            case 8: cornellSmoke(); break;
+            case 9:  finalScene(1000, 10000, 40); break;
+            default: finalScene(400,   250,  4); break;
         }
         
         JFrame frame = new JFrame("PPM Viewer");
@@ -30,6 +33,123 @@ public class main {
         frame.setSize(contentWidth, contentHeight);
         frame.setVisible(true);
     }
+    public static void finalScene(int width, int samplesPerPixel, int maxDepth){
+        hittableList boxes1 = new hittableList();
+        lambertian ground = new lambertian(new color(0.48, 0.83, 0.53));
+
+        int boxesPerSide = 20;
+        for(int i = 0; i < boxesPerSide; i++){
+            for(int j = 0; j < boxesPerSide; j++){
+                double w = 100.0;
+                double x0 = -1000.0 + i*w;
+                double z0 = -1000.0 + j*w;
+                double y0 = 0.0;
+                
+                double x1 = x0 + w;
+                double y1 = constants.randomDouble(1,101);
+                double z1 = z0 + w;
+                boxes1.add(quad.box(new vec3(x0,y0,z0), new vec3(x1,y1,z1), ground));
+            }
+        }
+
+        hittableList world = new hittableList();
+        world.add(new bvh(boxes1));
+
+        diffuseLight light = new diffuseLight(new color(7,7,7));
+        world.add(new quad(new vec3(123, 554, 147), new vec3(300,0,0), new vec3(0,0,265),light));
+
+        vec3 c1 = new vec3(400,400,400);
+        vec3 c2 = vec3.add(c1, new vec3(30,0,0));
+        lambertian sphereMat = new lambertian(new color(0.7,0.3,0.1));
+        world.add(new sphere(c1,c2,50,sphereMat));
+
+        world.add(new sphere(new vec3(260,150,45), 50, new dielectric(1.5)));
+        world.add(new sphere(new vec3(0,150,145), 50, new metal(new color(0.8, 0.8, 0.9), 1.0)));
+
+        sphere boundary = new sphere(new vec3(360, 150, 145), 70, new dielectric(1.5));
+        world.add(boundary);
+        world.add(new constantMedium(boundary, 0.2, new color(0.2, 0.4, 0.9)));
+        boundary = new sphere(new vec3(0,0,0), 5000, new dielectric(1.5));
+        world.add(new constantMedium(boundary, .0001, new color(1,1,1)));
+        
+        lambertian emat = new lambertian(new imageTexture("earthmap.jpg"));
+        world.add(new sphere(new vec3(400, 200, 400), 100, emat));
+        noiseTexture perText = new noiseTexture(0.2);
+        world.add(new sphere(new vec3(220, 280, 300), 80, new lambertian(perText)));
+
+        hittableList boxes2 = new hittableList();
+        lambertian white = new lambertian(new color(.73,.73,.73));
+        int ns = 1000;
+        for(int j = 0; j < ns; j++){
+            boxes2.add(new sphere(vec3.random(0,165), 10, white));
+        }
+        world.add(new translate(new rotateY(new bvh(boxes2), 115), new vec3(-100, 270, 395)));
+
+        cam.aspectRatio = 1.0;
+        cam.imageWidth = width;
+        cam.samplesPerPixel = samplesPerPixel;
+        cam.maxDepth = maxDepth;
+
+        cam.vFov = 40;
+        cam.lookFrom = new vec3(478, 278, -600);
+        cam.lookAt = new vec3(278, 278, 0);
+        cam.vUp = new vec3(0, 1, 0);
+
+        cam.defocusAngle = 0;
+        cam.background = new color(0, 0, 0);
+
+        long startTime = System.nanoTime();
+        cam.render(world);
+        long endTime = System.nanoTime();
+        double duration = (endTime - startTime) / 1_000_000_000.0;
+        System.out.printf("Rendering & Writing completed in %.2f seconds%n", duration);
+        
+    }
+    public static void cornellSmoke() {
+        hittableList world = new hittableList();
+
+        lambertian red = new lambertian(new color(0.65, 0.05, 0.05));
+        lambertian white = new lambertian(new color(0.73, 0.73, 0.73));
+        lambertian green = new lambertian(new color(0.12, 0.45, 0.15));
+        diffuseLight light = new diffuseLight(new color(7, 7, 7));
+
+        world.add(new quad(new vec3(555, 0, 0), new vec3(0, 555, 0), new vec3(0, 0, 555), green));
+        world.add(new quad(new vec3(0, 0, 0), new vec3(0, 555, 0), new vec3(0, 0, 555), red));
+        world.add(new quad(new vec3(113, 554, 127), new vec3(330, 0, 0), new vec3(0, 0, 305), light));
+        world.add(new quad(new vec3(0, 555, 0), new vec3(555, 0, 0), new vec3(0, 0, 555), white));
+        world.add(new quad(new vec3(0, 0, 0), new vec3(555, 0, 0), new vec3(0, 0, 555), white));
+        world.add(new quad(new vec3(0, 0, 555), new vec3(555, 0, 0), new vec3(0, 555, 0), white));
+
+        hittable box1 = quad.box(new vec3(0, 0, 0), new vec3(165, 330, 165), white);
+        box1 = new rotateY(box1, 15);
+        box1 = new translate(box1, new vec3(265, 0, 295));
+        hittable box2 = quad.box(new vec3(0, 0, 0), new vec3(165, 165, 165), white);
+        box2 = new rotateY(box2, -18);
+        box2 = new translate(box2, new vec3(130,0,65));
+
+        world.add(new constantMedium(box1, 0.01, new color(0, 0, 0)));
+        world.add(new constantMedium(box2, 0.01, new color(1, 1, 1)));
+
+        cam.aspectRatio = 1.0;
+        cam.imageWidth = 600;
+        cam.samplesPerPixel = 20;
+        cam.maxDepth = 50;
+
+        cam.vFov = 40;
+        cam.lookFrom = new vec3(278, 278, -800);
+        cam.lookAt = new vec3(278, 278, 0);
+        cam.vUp = new vec3(0, 1, 0);
+
+        cam.defocusAngle = 0;
+        cam.background = new color(0, 0, 0);
+
+        long startTime = System.nanoTime();
+        cam.render(world);
+        long endTime = System.nanoTime();
+        double duration = (endTime - startTime) / 1_000_000_000.0;
+        System.out.printf("Rendering & Writing completed in %.2f seconds%n", duration);
+    }
+
     public static void cornellBox(){
         hittableList world = new hittableList();
         
