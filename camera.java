@@ -1,6 +1,7 @@
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.io.*;
+import java.util.function.Consumer;
 
 public class camera{
     public double aspectRatio;
@@ -33,24 +34,19 @@ public class camera{
     private vec3 defocusDiskU = new vec3();
     private vec3 defocusDiskV = new vec3();
 
-    public void render(hittable worldHittables){
-
+    public void render(hittable worldHittables, Consumer<Integer> progressCallback) {
         initialize();
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        try{
-            File out = new File("Output.ppm");
-            boolean fileCreated = out.createNewFile();
-            if (fileCreated) {
+        try {
+            File outFile = new File("Output.ppm");
+            if (outFile.createNewFile()) {
                 System.out.println("File created successfully.");
             } else {
                 System.out.println("File already exists.");
             }
 
-            // Redirect output to he file
-            File outFile = new File("Output.ppm");
-            PrintStream fileOut = new PrintStream(new FileOutputStream(outFile));         
-            // Write PPM file header
-            fileOut.format("P3\n%d %d\n%d\n",imageWidth,imageHeight,constants.u8int-1);
+            PrintStream fileOut = new PrintStream(new FileOutputStream(outFile));
+            fileOut.format("P3\n%d %d\n%d\n", imageWidth, imageHeight, constants.u8int - 1);
 
             color[][] imageData = new color[imageHeight][imageWidth];
             AtomicInteger completedRows = new AtomicInteger(0);
@@ -59,43 +55,38 @@ public class camera{
                 final int currentRow = j;
                 executor.submit(() -> {
                     for (int i = 0; i < imageWidth; i++) {
-                        color pixelColor = new color(0,0,0);
-                        for(int k = 0; k < samplesPerPixel; k++){
-                            ray r = getRay(i,currentRow);
-                            pixelColor.add(rayColor(r,maxDepth,worldHittables));
+                        color pixelColor = new color(0, 0, 0);
+                        for (int k = 0; k < samplesPerPixel; k++) {
+                            ray r = getRay(i, currentRow);
+                            pixelColor.add(rayColor(r, maxDepth, worldHittables));
                         }
                         vec3 tempCol = vec3.multiply(pixelSamplesScale, pixelColor);
-                        color col = new color(tempCol.x(),tempCol.y(),tempCol.z());
-                        imageData[currentRow][i] = col;
+                        imageData[currentRow][i] = new color(tempCol.x(), tempCol.y(), tempCol.z());
                     }
                     int rowsComplete = completedRows.incrementAndGet();
-                    int progressPercentage = (int)((rowsComplete/ (double)imageHeight) * 100);
-                    System.out.printf("\rRendering: %d%% completed [%d/%d]", progressPercentage, rowsComplete, imageHeight);
-              });
+                    int progressPercentage = (int) ((rowsComplete / (double) imageHeight) * 100);
+                    if (progressCallback != null) {
+                        progressCallback.accept(progressPercentage);
+                    }
+                });
             }
-              
+
             executor.shutdown();
-            try {
-                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS); 
-            } catch (InterruptedException e) {
-                System.err.println("Rendering interrupted: " + e.getMessage());
-                Thread.currentThread().interrupt();
-            }
-            System.out.println();
-            for(int j = 0; j < imageHeight; j++){
-                for(int i = 0; i < imageWidth; i++){
-                   color.writeColor(fileOut, imageData[j][i]);
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+
+            for (int j = 0; j < imageHeight; j++) {
+                for (int i = 0; i < imageWidth; i++) {
+                    color.writeColor(fileOut, imageData[j][i]);
                 }
-                int progressPercentage = (int)(((j+1)/(double)imageHeight) * 100);
-                System.out.printf("\rWriting: %d%% completed [%d/%d]", progressPercentage, (j+1), imageHeight);
             }
-            System.out.flush();
-            System.out.println("\nDONE");         
+
             fileOut.close();
-         } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
     }
+
     private void initialize(){
         imageHeight = (int)(imageWidth / aspectRatio);
         imageHeight = (imageHeight < 1) ? 1 : imageHeight;
