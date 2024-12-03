@@ -11,7 +11,7 @@ public class sphere implements hittable {
         
         vec3 radiusVec = new vec3(radius, radius, radius);
         bbox = new AABB(vec3.subtract(c,radiusVec), vec3.add(c,radiusVec));
-        System.out.println(bbox);
+        //System.out.println(bbox);
         System.out.println();
     }
     public sphere(vec3 c1, vec3 c2, double r, material m){

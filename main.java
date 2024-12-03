@@ -5,39 +5,203 @@ import java.awt.event.ActionListener;
 
 public class main {
     static camera cam = new camera();
+    private static CardLayout cardLayout;
+    private static JPanel mainPanel;
     private static JProgressBar progressBar;
     private static PPMViewer panel;
-    private static String currentScene = "Spheres"; // Default scene
-
+    private static String currentScene = "CORNELL BOX";
     public static void main(String[] args) {
+        cam.aspectRatio = 1.0;
         JFrame frame = new JFrame("Ray Tracer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLayout(new BorderLayout());
 
-        // Create the menu bar
-        JMenuBar menuBar = new JMenuBar();
-        JMenu sceneMenu = new JMenu("Scenes");
+        cardLayout = new CardLayout();
+        mainPanel = new JPanel(cardLayout);
 
-        // Add scene options to the menu
-        JMenuItem spheresScene = new JMenuItem("Spheres");
-        JMenuItem cornellBoxScene = new JMenuItem("Cornell Box");
-        JMenuItem showcaseScene = new JMenuItem("Showcase");
+        // Add the welcome screen
+        mainPanel.add(createWelcomePanel(frame), "Welcome");
 
-        sceneMenu.add(spheresScene);
-        sceneMenu.add(cornellBoxScene);
-        sceneMenu.add(showcaseScene);
-        menuBar.add(sceneMenu);
-        frame.setJMenuBar(menuBar);
+        // Add the renderer panel
+        mainPanel.add(createRendererPanel(), "Renderer");
 
-        // Scene selection actions
-        spheresScene.addActionListener(e -> currentScene = "Spheres");
-        cornellBoxScene.addActionListener(e -> currentScene = "Cornell Box");
-        showcaseScene.addActionListener(e -> currentScene = "Showcase");
+        frame.add(mainPanel);
+        frame.setSize(800, 700);
+        frame.setVisible(true);
 
-        // Create and add UI components
+        // Show the welcome screen first
+        cardLayout.show(mainPanel, "Welcome");
+    }
+
+    private static JPanel createWelcomePanel(JFrame frame) {
+        JPanel welcomePanel = new JPanel(new BorderLayout());
+
+        // Title
+        JLabel title = new JLabel("Physically Based Rendering", JLabel.CENTER);
+        title.setFont(new Font("Serif", Font.BOLD, 24));
+        welcomePanel.add(title, BorderLayout.NORTH);
+
+        // Image section
+        JPanel imagePanel = new JPanel(new GridLayout(1, 3, 10, 10));
+        imagePanel.add(createLabeledImage("Spheres", "spheres.png"));
+        imagePanel.add(createLabeledImage("Cornell Box", "cornell.png"));
+        imagePanel.add(createLabeledImage("Showcase", "showcase.png"));
+        welcomePanel.add(imagePanel, BorderLayout.CENTER);
+
+        // Continue button
+        JButton continueButton = new JButton("Continue");
+        continueButton.addActionListener(e -> cardLayout.show(mainPanel, "Renderer"));
+        welcomePanel.add(continueButton, BorderLayout.SOUTH);
+
+        return welcomePanel;
+    }
+
+    private static JPanel createMenuPanel() {
+        JPanel menuPanel = new JPanel();
+        menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
+
+        // Create buttons
+        JButton spheresButton = new JButton("Spheres");
+        JButton cornellBoxButton = new JButton("Cornell Box");
+        JButton showcaseButton = new JButton("Showcase");
+        JButton settingsButton = new JButton("Settings");
+
+        // Define a uniform button size
+        Dimension buttonSize = new Dimension(150, 40); // Width: 150px, Height: 40px
+        spheresButton.setPreferredSize(buttonSize);
+        cornellBoxButton.setPreferredSize(buttonSize);
+        showcaseButton.setPreferredSize(buttonSize);
+        settingsButton.setPreferredSize(buttonSize);
+
+        // Set maximum and minimum sizes to enforce uniformity
+        spheresButton.setMaximumSize(buttonSize);
+        cornellBoxButton.setMaximumSize(buttonSize);
+        showcaseButton.setMaximumSize(buttonSize);
+        settingsButton.setMaximumSize(buttonSize);
+
+        // Add action listeners for each button
+        spheresButton.addActionListener(e -> showConfigurationWindow("Spheres"));
+        cornellBoxButton.addActionListener(e -> showConfigurationWindow("Cornell Box"));
+        showcaseButton.addActionListener(e -> showConfigurationWindow("Showcase"));
+        settingsButton.addActionListener(e -> configureSettings()); 
+
+        // Add buttons to the menu panel
+        menuPanel.add(spheresButton);
+        menuPanel.add(Box.createVerticalStrut(10)); // Add spacing
+        menuPanel.add(cornellBoxButton);
+        menuPanel.add(Box.createVerticalStrut(10));
+        menuPanel.add(showcaseButton);
+        menuPanel.add(Box.createVerticalStrut(10));
+        menuPanel.add(settingsButton);
+
+        // Add padding to the menu
+        menuPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        return menuPanel;
+    }
+
+
+    private static void configureSettings() {
+        // Validate camera values before creating sliders
+        cam.imageWidth = Math.max(100, Math.min(600, cam.imageWidth));
+        cam.samplesPerPixel = Math.max(1, Math.min(500, cam.samplesPerPixel));
+        cam.maxDepth = Math.max(1, Math.min(50, cam.maxDepth));
+
+        JDialog configDialog = new JDialog((Frame) null, "SETTINGS", true);
+        configDialog.setLayout(new BorderLayout());
+        configDialog.setSize(400, 300);
+
+        // Panel for sliders
+        JPanel slidersPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+
+        // Width slider
+        JLabel widthLabel = new JLabel("Image Width:");
+        JSlider widthSlider = new JSlider(100, 600, cam.imageWidth);
+        JLabel widthValueLabel = new JLabel(String.valueOf(cam.imageWidth));
+
+        widthSlider.addChangeListener(e -> widthValueLabel.setText(String.valueOf(widthSlider.getValue())));
+
+        // Samples per pixel slider
+        JLabel samplesLabel = new JLabel("Samples:");
+        JSlider samplesSlider = new JSlider(1, 1000, cam.samplesPerPixel);
+        JLabel samplesValueLabel = new JLabel(String.valueOf(cam.samplesPerPixel));
+
+        samplesSlider.addChangeListener(e -> samplesValueLabel.setText(String.valueOf(samplesSlider.getValue())));
+
+        // Max depth slider
+        JLabel depthLabel = new JLabel("Max Depth:");
+        JSlider depthSlider = new JSlider(1, 100, cam.maxDepth);
+        JLabel depthValueLabel = new JLabel(String.valueOf(cam.maxDepth));
+        depthSlider.addChangeListener(e -> depthValueLabel.setText(String.valueOf(depthSlider.getValue())));
+
+        // Add sliders and labels to the panel
+        slidersPanel.add(widthLabel);
+        slidersPanel.add(widthSlider);
+        slidersPanel.add(new JLabel("Value:"));
+        slidersPanel.add(widthValueLabel);
+        slidersPanel.add(samplesLabel);
+        slidersPanel.add(samplesSlider);
+        slidersPanel.add(new JLabel("Value:"));
+        slidersPanel.add(samplesValueLabel);
+        slidersPanel.add(depthLabel);
+        slidersPanel.add(depthSlider);
+        slidersPanel.add(new JLabel("Value:"));
+        slidersPanel.add(depthValueLabel);
+
+        // Confirm button
+        JButton confirmButton = new JButton("Confirm");
+        confirmButton.addActionListener(e -> {
+            // Set camera settings based on slider values
+            cam.imageWidth = widthSlider.getValue();
+            cam.imageHeight = cam.imageWidth; // Maintain aspect ratio as 1:1
+            cam.samplesPerPixel = samplesSlider.getValue();
+            cam.maxDepth = depthSlider.getValue();
+
+            System.out.println("Settings updated:");
+            System.out.println("  Image Width: " + cam.imageWidth + " x " + cam.imageHeight);
+            System.out.println("  Samples Per Pixel: " + cam.samplesPerPixel);
+            System.out.println("  Max Depth: " + cam.maxDepth);
+
+            configDialog.dispose(); // Close dialog
+        });
+
+        configDialog.add(slidersPanel, BorderLayout.CENTER);
+        configDialog.add(confirmButton, BorderLayout.SOUTH);
+
+        configDialog.setLocationRelativeTo(null); // Center the dialog on the screen
+        configDialog.setVisible(true);
+    }
+
+
+    private static void showConfigurationWindow(String title) {
+        JDialog configDialog = new JDialog((Frame) null, title + " Configuration", true);
+        configDialog.setLayout(new BorderLayout());
+        configDialog.setSize(400, 300);
+
+        // Placeholder: Add your configuration components here
+        JLabel placeholderLabel = new JLabel("Configure settings for " + title, JLabel.CENTER);
+        JButton confirmButton = new JButton("Confirm");
+
+        confirmButton.addActionListener(e -> configDialog.dispose()); // Close dialog on confirm
+
+        configDialog.add(placeholderLabel, BorderLayout.CENTER);
+        configDialog.add(confirmButton, BorderLayout.SOUTH);
+
+        configDialog.setLocationRelativeTo(null); // Center the dialog on the screen
+        configDialog.setVisible(true);
+    }
+
+    private static JPanel createRendererPanel() {
+        JPanel rendererPanel = new JPanel(new BorderLayout());
+
+        // Create and add the image viewer panel
         panel = new PPMViewer("Output.ppm");
-        frame.add(panel, BorderLayout.CENTER);
+        rendererPanel.add(panel, BorderLayout.CENTER);
 
+        // Create and add the menu panel on the right
+        JPanel menuPanel = createMenuPanel();
+        rendererPanel.add(menuPanel, BorderLayout.EAST);
+
+        // Create and add the control panel at the bottom
         JPanel controlPanel = new JPanel();
         JButton renderButton = new JButton("Render");
         progressBar = new JProgressBar(0, 100);
@@ -45,7 +209,7 @@ public class main {
 
         controlPanel.add(renderButton);
         controlPanel.add(progressBar);
-        frame.add(controlPanel, BorderLayout.SOUTH);
+        rendererPanel.add(controlPanel, BorderLayout.SOUTH);
 
         // Render button action
         renderButton.addActionListener(new ActionListener() {
@@ -55,12 +219,50 @@ public class main {
             }
         });
 
-        // Adjust frame size
-        frame.pack();
-        frame.setSize(800, 700);
-        frame.setVisible(true);
+        return rendererPanel;
     }
 
+
+
+
+    private static JPanel createLabeledImage(String title, String imagePath) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        JLabel titleLabel = new JLabel(title, JLabel.CENTER);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel imageLabel;
+        try {
+            ImageIcon originalIcon = new ImageIcon(imagePath);
+            Image originalImage = originalIcon.getImage();
+
+            int maxWidth = 300;  // Example max width
+            int maxHeight = 300; // Example max height
+            double aspectRatio = (double) originalImage.getWidth(null) / originalImage.getHeight(null);
+
+            int scaledWidth, scaledHeight;
+            if (aspectRatio >= 1) { // Wider than tall
+                scaledWidth = Math.min(maxWidth, originalImage.getWidth(null));
+                scaledHeight = (int) (scaledWidth / aspectRatio);
+            } else { // Taller than wide
+                scaledHeight = Math.min(maxHeight, originalImage.getHeight(null));
+                scaledWidth = (int) (scaledHeight * aspectRatio);
+            }
+
+            Image scaledImage = originalImage.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_SMOOTH);
+            imageLabel = new JLabel(new ImageIcon(scaledImage));
+            imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        } catch (Exception e) {
+            imageLabel = new JLabel("Image Not Found", JLabel.CENTER);
+            imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        }
+
+        panel.add(titleLabel);
+        panel.add(imageLabel);
+
+        return panel;
+    }
     private static void renderScene() {
         SwingWorker<Void, Integer> worker = new SwingWorker<>() {
             @Override
@@ -74,10 +276,6 @@ public class main {
                     world = setupSpheres();
                 }
 
-                cam.aspectRatio = 1.0;
-                cam.imageWidth = 600;
-                cam.samplesPerPixel = 1000;
-                cam.maxDepth = 50;
 
                 // Start rendering
                 long startTime = System.nanoTime();
@@ -106,9 +304,7 @@ public class main {
         };
 
         worker.execute();
-    }
-
-    private static hittableList setupCornellBox() {
+    }    private static hittableList setupCornellBox() {
         cam.vFov = 40;
         cam.lookFrom = new vec3(278, 278, -800);
         cam.lookAt = new vec3(278, 278, 0);
