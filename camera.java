@@ -164,7 +164,7 @@ public class camera {
         }
 
         hitRecord rec = new hitRecord();
-        if (world.hit(r, 0.001, Double.POSITIVE_INFINITY, rec)) {
+        if (world.hit(r, new interval(0.001, Double.POSITIVE_INFINITY), rec)) {
             ray scattered = new ray();
             color attenuation = new color();
             if (rec.material.scatter(r, rec, attenuation, scattered)) {
