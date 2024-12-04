@@ -6,15 +6,15 @@ This ray tracing program includes a graphical user interface and customizable ma
 To compile and run the project, use the following commands:
 
 ```bash
-javac -d bin src/*.java
-java -cp bin main
+javac *.java
+java main
 ```
 Resources
 Physically-Based Rendering book
 Ray Tracing in One Weekend series
 Building a BVH from Scratch blog
 Rubric
-1. Project Complexity
+Project Complexity
 1.1 Advanced Algorithms
 Several algorithms are used, including those for primitive-ray intersection, vector operations, texture generation, and trigonometric operations. The most important is the implementation of the rendering equation in the camera class.
 
@@ -42,7 +42,7 @@ Git was used to manage versions, and the project was periodically updated on Git
 2.4 Maintenance
 Refer to 2.2 regarding the modularity of the project.
 
-3. Visual Component and Design
+Visual Component and Design 
 3.1 UI Structure
 The menu screen and customization sub-windows clearly separate the render from its associated options.
 
@@ -55,7 +55,7 @@ The visual components are updated based on a modified Swing look and feel.
 3.4 Screen Size
 The screen size can be changed; however, due to the computational demands of the program, the default settings are recommended. Any changes to the screen size will not affect the image size, which is capped at 600 pixels. This is to ensure faster render times and preserve quality.
 
-4. User Interaction
+User Interaction
 4.1 Error Handling
 Error handling is implemented for file operations and usage of the PPM format. Other user interactions are validated, and sliders and menus ensure only valid data is entered.
 
