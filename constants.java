@@ -1,5 +1,9 @@
 import java.util.Random;
 
+/*
+This is a collection of constants and simple conversions / utilities.
+Most are implemented internally in Java so this file exists soley for organizational purposes.
+*/
 public class constants{
     public static final int u8int = 256;
     public static final double pi = 3.1415926535897932385;
