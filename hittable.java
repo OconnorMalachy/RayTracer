@@ -3,10 +3,12 @@ import java.util.List;
 import java.util.Collections;
 import java.util.Comparator;
 
+// Interface for hittable objects, including methods for checking intersection with rays and obtaining the bounding box
 public interface hittable {
     public boolean hit(ray r, interval rayT, hitRecord rec);
     public AABB boundingBox();
 }
+// Collection of hittables in order to use the BVH.
 class hittableList implements hittable {
     public List<hittable> objects;
     public hittableList() {objects = new ArrayList<>();}
@@ -46,6 +48,7 @@ class hittableList implements hittable {
         return hitAnything;
     }
 }
+// Moves a hittable
 class translate implements hittable{
     private hittable object;
     private vec3 offset;
@@ -65,6 +68,7 @@ class translate implements hittable{
         return true;
     }
 }
+// Boudning volume hierarchy used in ray-object intersection tests.
 class bvh implements hittable {
     private hittable left;
     private hittable right;
@@ -92,11 +96,6 @@ class bvh implements hittable {
                                                  : boxZComparator;
 
         int objectSpan = end - start;
-        /*
-        System.out.println("Depth: " + depth + ", Object Span: " + objectSpan);
-        System.out.println("Bounding Box: " + bbox);
-        System.out.println("Objects in this BVH node:");
-        */
         for (int i = start; i < end; i++) {
             System.out.println(" - " + objects.get(i));
         }
@@ -147,6 +146,7 @@ class bvh implements hittable {
         return Double.compare(aMin, bMin);
     }
 }
+
 class sphere implements hittable {
     private ray center;
     private double radius;
@@ -215,6 +215,7 @@ class sphere implements hittable {
     }
 
 }
+// A mixture between reflectance and refraction
 class constantMedium implements hittable{
     private hittable boundary;
     private double negInvDensity;
