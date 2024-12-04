@@ -8,6 +8,7 @@ To compile and run the project, use the following commands:
 ```bash
 javac -d bin src/*.java
 java -cp bin main
+```
 Resources
 Physically-Based Rendering book
 Ray Tracing in One Weekend series
