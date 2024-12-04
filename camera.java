@@ -167,7 +167,7 @@ public class camera {
         if (world.hit(r, new interval(0.001, Double.POSITIVE_INFINITY), rec)) {
             ray scattered = new ray();
             color attenuation = new color();
-            if (rec.material.scatter(r, rec, attenuation, scattered)) {
+            if (rec.mat.scatter(r, rec, attenuation, scattered)) {
                 // Calculate the color by tracing the scattered ray recursively
                 return attenuation.multiply(rayColor(scattered, depth - 1, world));
             } else {
