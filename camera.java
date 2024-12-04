@@ -158,23 +158,31 @@ public class camera {
     }
 
     // Calculate the color of the ray by tracing it through the scene
-    private color rayColor(ray r, int depth, hittable world) {
-        if (depth <= 0) {
-            return new color(0, 0, 0);  // No color if maximum recursion depth is exceeded
+    private color rayColor(ray r, int depth, hittable world){
+        // If we've exceeded the ray bounce limit, no more light is gathered.
+        if(depth <= 0){
+            return new color(0, 0, 0);  // black color
         }
 
         hitRecord rec = new hitRecord();
-        if (world.hit(r, new interval(0.001, Double.POSITIVE_INFINITY), rec)) {
-            ray scattered = new ray();
-            color attenuation = new color();
-            if (rec.mat.scatter(r, rec, attenuation, scattered)) {
-                // Calculate the color by tracing the scattered ray recursively
-                return attenuation.multiply(rayColor(scattered, depth - 1, world));
-            } else {
-                return new color(0, 0, 0);  // No color if the ray doesn't scatter
-            }
-        } else {
-            return background;  // Return the background color if no hit
+
+        // If the ray hits nothing, return the background color.
+        if(!world.hit(r, new interval(0.001, constants.infinity), rec)){
+            return background;  // background color, typically black or sky color
         }
+
+        // Get emitted light from the material at the hit point.
+        color colorFromEmission = rec.mat.emitted(rec.u, rec.v, rec.p);
+        // Try to scatter the ray.
+        ray scattered = new ray();
+        color attenuation = new color();
+        if(!rec.mat.scatter(r, rec, attenuation, scattered)){
+            return colorFromEmission;  // If no scattering, return the emitted color.
+        }
+        // Recursively calculate color from scattered ray.
+        color colorFromScatter = color.vecToCol(vec3.multiply(attenuation, rayColor(scattered, depth - 1, world)));
+        //if(colorFromScatter.x() > 0){System.out.println(colorFromScatter);}
+        // Return the combined color: emission + scattered color.
+        return color.vecToCol(vec3.add(colorFromEmission,colorFromScatter));
     }
 }
