@@ -9,11 +9,15 @@ To compile and run the project, use the following commands:
 javac *.java
 java main
 ```
-Resources
+## Resources
+
 Physically-Based Rendering book
+
 Ray Tracing in One Weekend series
+
 Building a BVH from Scratch blog
-Rubric
+
+# RUBRIC 
 
 ## Project Complexity
 
